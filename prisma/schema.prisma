@@ -1,0 +1,518 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// MULTI-TENANT & AUTH
+// ============================================================
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  plan        String   @default("STARTER") // STARTER | PRO | BUSINESS | ENTERPRISE
+  isActive    Boolean  @default(true)
+  trialEndsAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users         User[]
+  contacts      Contact[]
+  biens         Bien[]
+  baux          Bail[]
+  transactions  Transaction[]
+  coproprietes  Copropriete[]
+  factures      Facture[]
+  taches        Tache[]
+  activites     Activite[]
+  travaux       Travail[]
+  tags          Tag[]
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          String    @default("AGENT") // SUPER_ADMIN | ADMIN_AGENCE | AGENT | GESTIONNAIRE_LOCATIF | COMPTABLE | ASSISTANT | LECTURE_SEULE
+  isActive      Boolean   @default(true)
+  mfaEnabled    Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contactsAssigned Contact[]    @relation("AgentContacts")
+  taches           Tache[]      @relation("UserTaches")
+  activites        Activite[]
+  transactions     Transaction[] @relation("AgentTransactions")
+  auditLogs        AuditLog[]
+
+  @@index([tenantId])
+  @@index([email])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
+
+// ============================================================
+// CRM
+// ============================================================
+
+model Contact {
+  id          String   @id @default(cuid())
+  type        String   // ACHETEUR | LOCATAIRE | PROPRIETAIRE | VENDEUR | PROSPECT
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  phone2      String?
+  address     String?
+  city        String?
+  country     String?
+  company     String?
+  notes       String?  @db.NVarChar(Max)
+  source      String?
+  budgetMin   Float?
+  budgetMax   Float?
+  criteres    String?  @db.NVarChar(Max) // JSON string for custom search criteria
+  score       Int      @default(0)
+  pipelineStage String @default("NOUVEAU") // NOUVEAU | QUALIFIE | VISITE_PLANIFIEE | OFFRE | SIGNE | PERDU
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  agentId String?
+  agent   User?   @relation("AgentContacts", fields: [agentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  tags          ContactTag[]
+  activites     Activite[]
+  baux          Bail[]       @relation("LocataireContact")
+  bauxProprietaire Bail[]    @relation("ProprietaireContact")
+  biensProprietaire Bien[]   @relation("ProprietaireBien")
+  transactions  Transaction[]
+  documents     Document[]
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([pipelineStage])
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String
+  color String @default("#3b82f6")
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  contacts ContactTag[]
+
+  @@unique([tenantId, name])
+}
+
+model ContactTag {
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([contactId, tagId])
+}
+
+model Activite {
+  id          String   @id @default(cuid())
+  type        String   // APPEL | EMAIL | VISITE | REUNION | NOTE | DOCUMENT | TACHE
+  title       String
+  description String?  @db.NVarChar(Max)
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  bienId String?
+  bien   Bien?   @relation(fields: [bienId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([bienId])
+}
+
+model Tache {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.NVarChar(Max)
+  dueDate     DateTime?
+  priority    String   @default("MOYENNE") // BASSE | MOYENNE | HAUTE | URGENTE
+  status      String   @default("A_FAIRE") // A_FAIRE | EN_COURS | TERMINEE | ANNULEE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  assigneeId String
+  assignee   User   @relation("UserTaches", fields: [assigneeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenantId])
+  @@index([assigneeId])
+  @@index([status])
+}
+
+// ============================================================
+// CATALOGUE DES BIENS
+// ============================================================
+
+model Bien {
+  id              String   @id @default(cuid())
+  reference       String
+  title           String
+  description     String?  @db.NVarChar(Max)
+  type            String   // APPARTEMENT | MAISON | VILLA | LOCAL_COMMERCIAL | TERRAIN | IMMEUBLE | BUREAU | STUDIO
+  transactionType String   // VENTE | LOCATION | LOCATION_VENTE | VIAGER
+  status          String   @default("DISPONIBLE") // DISPONIBLE | SOUS_COMPROMIS | LOUE | VENDU | ARCHIVE
+  price           Float
+  surface         Float?
+  rooms           Int?
+  bedrooms        Int?
+  bathrooms       Int?
+  floor           Int?
+  totalFloors     Int?
+  yearBuilt       Int?
+  address         String
+  city            String
+  postalCode      String?
+  country         String   @default("Sénégal")
+  latitude        Float?
+  longitude       Float?
+  features        String?  @db.NVarChar(Max) // JSON: parking, balcon, ascenseur, etc.
+  dpe             String?
+  images          String?  @db.NVarChar(Max) // JSON array des URLs des images
+  virtualTourUrl  String?
+  publishedPortals String? @db.NVarChar(Max) // JSON array des portails
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  proprietaireId String?
+  proprietaire   Contact? @relation("ProprietaireBien", fields: [proprietaireId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  baux          Bail[]
+  activites     Activite[]
+  transactions  Transaction[]
+  travaux       Travail[]
+  documents     Document[]
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([status])
+  @@index([transactionType])
+  @@unique([tenantId, reference])
+}
+
+// ============================================================
+// GESTION LOCATIVE
+// ============================================================
+
+model Bail {
+  id              String   @id @default(cuid())
+  type            String   // NU | MEUBLE | COMMERCIAL | SAISONNIER
+  dateDebut       DateTime
+  dateFin         DateTime?
+  loyerMensuel    Float
+  charges         Float    @default(0)
+  depotGarantie   Float    @default(0)
+  jourPaiement    Int      @default(1) // Jour du mois
+  status          String   @default("ACTIF") // ACTIF | RENOUVELE | RESILIE | EXPIRE
+  notesSpeciales  String?  @db.NVarChar(Max)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  bienId String
+  bien   Bien   @relation(fields: [bienId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  locataireId String
+  locataire   Contact @relation("LocataireContact", fields: [locataireId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  proprietaireId String
+  proprietaire   Contact @relation("ProprietaireContact", fields: [proprietaireId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  quittances    Quittance[]
+  etatsDesLieux EtatDesLieux[]
+
+  @@index([tenantId])
+  @@index([bienId])
+  @@index([status])
+}
+
+model Quittance {
+  id             String   @id @default(cuid())
+  periode        DateTime // Mois concerné
+  montantLoyer   Float
+  montantCharges Float    @default(0)
+  montantTotal   Float
+  montantPaye    Float    @default(0)
+  datePaiement   DateTime?
+  status         String   @default("EN_ATTENTE") // EN_ATTENTE | PAYEE | RETARD | IMPAYEE | PARTIELLE
+  pdfUrl         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bailId String
+  bail   Bail   @relation(fields: [bailId], references: [id], onDelete: Cascade)
+
+  @@index([bailId])
+  @@index([status])
+  @@index([periode])
+}
+
+model EtatDesLieux {
+  id          String   @id @default(cuid())
+  type        String   // ENTREE | SORTIE
+  date        DateTime
+  observations String? @db.NVarChar(Max) // JSON détaillé pièce par pièce
+  photos      String?  @db.NVarChar(Max) // JSON array des URLs photos
+  signatureLocataire String?
+  signatureAgent     String?
+  createdAt   DateTime @default(now())
+
+  bailId String
+  bail   Bail   @relation(fields: [bailId], references: [id], onDelete: Cascade)
+
+  @@index([bailId])
+}
+
+model Travail {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.NVarChar(Max)
+  categorie   String?  // Plomberie, Electricité, etc.
+  prestataire String?
+  cout        Float?
+  status      String   @default("OUVERT") // OUVERT | EN_COURS | RESOLU | ANNULE
+  dateOuverture DateTime @default(now())
+  dateResolution DateTime?
+  photos      String?  @db.NVarChar(Max) // JSON array des URLs photos
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  bienId String
+  bien   Bien   @relation(fields: [bienId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenantId])
+  @@index([bienId])
+  @@index([status])
+}
+
+// ============================================================
+// TRANSACTIONS & VENTE
+// ============================================================
+
+model Transaction {
+  id              String   @id @default(cuid())
+  type            String   // VENTE | LOCATION | LOCATION_VENTE | VIAGER
+  stage           String   @default("MANDAT_RECU") // MANDAT_RECU | VISITES | OFFRE_ACHAT | COMPROMIS | ACTE_FINAL | ANNULEE
+  prixDemande     Float
+  prixFinal       Float?
+  commission      Float?
+  tauxCommission  Float?
+  dateMandat      DateTime?
+  dateCompromis   DateTime?
+  dateActeFinal   DateTime?
+  notes           String?  @db.NVarChar(Max)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  bienId String
+  bien   Bien   @relation(fields: [bienId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  agentId String
+  agent   User   @relation("AgentTransactions", fields: [agentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  documents Document[]
+
+  @@index([tenantId])
+  @@index([stage])
+}
+
+// ============================================================
+// SYNDIC / COPROPRIETE
+// ============================================================
+
+model Copropriete {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  city      String
+  totalLots Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  coproprietaires Coproprietaire[]
+  assemblees      AssembleeGenerale[]
+  chargesAppels   AppelCharges[]
+
+  @@index([tenantId])
+}
+
+model Coproprietaire {
+  id        String   @id @default(cuid())
+  nom       String
+  email     String?
+  phone     String?
+  lot       String
+  tantiemes Int
+  createdAt DateTime @default(now())
+
+  coproprieteId String
+  copropriete   Copropriete @relation(fields: [coproprieteId], references: [id], onDelete: Cascade)
+
+  paiements PaiementCharges[]
+
+  @@index([coproprieteId])
+}
+
+model AssembleeGenerale {
+  id          String   @id @default(cuid())
+  date        DateTime
+  ordreDuJour String?  @db.NVarChar(Max)
+  pvUrl       String?
+  status      String   @default("PLANIFIEE") // PLANIFIEE | EN_COURS | TERMINEE
+  createdAt   DateTime @default(now())
+
+  coproprieteId String
+  copropriete   Copropriete @relation(fields: [coproprieteId], references: [id], onDelete: Cascade)
+
+  @@index([coproprieteId])
+}
+
+model AppelCharges {
+  id           String   @id @default(cuid())
+  trimestre    String
+  montantTotal Float
+  dateEmission DateTime
+  dateEcheance DateTime
+  createdAt    DateTime @default(now())
+
+  coproprieteId String
+  copropriete   Copropriete @relation(fields: [coproprieteId], references: [id], onDelete: Cascade)
+
+  paiements PaiementCharges[]
+
+  @@index([coproprieteId])
+}
+
+model PaiementCharges {
+  id           String   @id @default(cuid())
+  montant      Float
+  datePaiement DateTime
+  createdAt    DateTime @default(now())
+
+  appelId String
+  appel   AppelCharges @relation(fields: [appelId], references: [id], onDelete: Cascade)
+
+  coproprietaireId String
+  coproprietaire   Coproprietaire @relation(fields: [coproprietaireId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([appelId])
+  @@index([coproprietaireId])
+}
+
+// ============================================================
+// FINANCE & FACTURATION
+// ============================================================
+
+model Facture {
+  id           String   @id @default(cuid())
+  numero       String
+  type         String   // HONORAIRES_VENTE | HONORAIRES_LOCATION | FRAIS_GESTION | AUTRE
+  montantHT    Float
+  tva          Float    @default(0)
+  montantTTC   Float
+  dateEmission DateTime
+  dateEcheance DateTime
+  status       String   @default("EN_ATTENTE") // EN_ATTENTE | PAYEE | RETARD | ANNULEE
+  pdfUrl       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+// ============================================================
+// DOCUMENTS
+// ============================================================
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  url       String
+  size      Int?
+  createdAt DateTime @default(now())
+
+  contactId     String?
+  contact       Contact?     @relation(fields: [contactId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  bienId        String?
+  bien          Bien?        @relation(fields: [bienId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([contactId])
+  @@index([bienId])
+  @@index([transactionId])
+}

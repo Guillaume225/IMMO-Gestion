@@ -1,0 +1,443 @@
+
+
+
+
+CAHIER DES CHARGES
+Logiciel de Gestion Immobilière SaaS
+─────────────────────────────
+Champ	Valeur
+Projet	Plateforme SaaS Immobilier
+Version du document	1.0
+Date de création	2025
+Statut	Draft — En cours de validation
+Cible	Agences immobilières
+Périmètre géographique	Afrique francophone & international
+Modules couverts	CRM, Locatif, Vente, Syndic, Finance, SaaS
+
+
+ 
+Table des matières
+Table des matières	2
+1. Présentation du projet	4
+1.1 Contexte et opportunité	4
+1.2 Objectifs du projet	4
+1.3 Parties prenantes	4
+1.4 Périmètre du projet	4
+2. Besoins fonctionnels	6
+2.1 Module CRM — Gestion de la relation client	6
+2.1.1 Gestion des contacts	6
+2.1.2 Pipeline de prospection	6
+2.1.3 Activités et tâches	6
+2.1.4 Performance agents	6
+2.2 Module Catalogue des biens	6
+2.2.1 Référentiel des biens	6
+2.2.2 Matching automatique	6
+2.2.3 Publication multi-portails	6
+2.3 Module Gestion locative	7
+2.3.1 Dossier locataire	7
+2.3.2 Gestion des baux	7
+2.3.3 Quittancement et paiements	7
+2.3.4 États des lieux	7
+2.3.5 Gestion des travaux	7
+2.3.6 Rapport de gérance	7
+2.4 Module Transactions & Vente	8
+2.4.1 Suivi du cycle de vente	8
+2.4.2 Documents transactionnels	8
+2.4.3 Commissions et honoraires	8
+2.5 Module Syndic / Copropriété	8
+2.5.1 Gestion de la copropriété	8
+2.5.2 Assemblées générales	8
+2.5.3 Carnet d'entretien	8
+2.5.4 Espace copropriétaires	8
+2.6 Module Reporting & Finance	8
+3. Besoins non fonctionnels	10
+3.1 Performance	10
+3.2 Sécurité	10
+3.3 Compatibilité	10
+3.4 Scalabilité	10
+3.5 Maintenabilité	10
+4. Architecture technique recommandée	11
+4.1 Stack technologique	11
+4.2 Architecture multi-tenants	11
+4.3 API et intégrations	11
+5. Modèle SaaS et monétisation	12
+5.1 Plans tarifaires	12
+5.2 Gestion des abonnements	12
+5.3 Onboarding	12
+6. Gestion des rôles et permissions	13
+6.1 Rôles disponibles	13
+6.2 Règles générales	13
+7. Interfaces utilisateur	14
+7.1 Principes de design	14
+7.2 Écrans principaux	14
+7.3 Application mobile	14
+8. Planning et phases de développement	15
+8.1 Découpage en phases	15
+8.2 Critères de succès du MVP	15
+9. Contraintes et risques	16
+9.1 Contraintes	16
+9.2 Risques identifiés	16
+10. Glossaire	17
+11. Annexes	17
+11.1 Documents à produire en complément	17
+11.2 Références	17
+
+ 
+1. Présentation du projet
+1.1 Contexte et opportunité
+Le marché immobilier en Afrique francophone et dans les pays francophones connaît une croissance soutenue, portée par l'urbanisation, la demande locative et l'essor des agences immobilières professionnalisées. Pourtant, la majorité des acteurs du secteur opèrent encore avec des outils artisanaux : fichiers Excel, carnets papier, ou logiciels obsolètes non adaptés aux réalités locales.
+Ce projet vise à concevoir et déployer une plateforme SaaS (Software as a Service) de gestion immobilière complète, moderne, cloud-native, et accessible par abonnement mensuel. La solution couvrira l'intégralité du cycle de vie d'une agence immobilière : de la prospection client jusqu'à la gestion post-vente ou post-location.
+1.2 Objectifs du projet
+•	Fournir aux agences immobilières un outil tout-en-un remplaçant les solutions fragmentées
+•	Automatiser les tâches répétitives (quittances, relances, rapports)
+•	Centraliser la donnée client, bien et transaction dans un référentiel unique
+•	Offrir un modèle économique SaaS accessible (abonnement mensuel)
+•	Garantir une accessibilité mobile et desktop dans des contextes de connectivité variés
+•	Permettre la publication automatique des annonces sur les portails immobiliers
+1.3 Parties prenantes
+Partie prenante	Rôle	Niveau d'implication
+Porteur de projet / Fondateur	Commanditaire, vision produit	Très élevé
+Chef de produit (Product Owner)	Priorisation du backlog, recette	Élevé
+Équipe technique (Dev, DevOps)	Conception et développement	Élevé
+Agences immobilières pilotes	Tests utilisateurs, retours terrain	Moyen
+Investisseurs	Financement du développement	Moyen
+Notaires et partenaires juridiques	Validation des flux documents	Faible
+
+1.4 Périmètre du projet
+Périmètre inclus (In Scope)
+CRM agence, catalogue de biens, gestion locative complète, gestion des transactions de vente, syndic de copropriété, module financier et reporting, infrastructure SaaS multi-tenants, application mobile, API ouverte.
+
+Périmètre exclu (Out of Scope)
+Portail public d'annonces (site vitrine côté acheteur/locataire), module de crédit immobilier, gestion cadastrale, intégration avec les administrations fiscales (phase ultérieure).
+
+ 
+2. Besoins fonctionnels
+2.1 Module CRM — Gestion de la relation client
+2.1.1 Gestion des contacts
+•	Création de fiches contacts pour les acheteurs, locataires, propriétaires et vendeurs
+•	Champs personnalisés : identité, coordonnées, type de recherche, budget, critères
+•	Historique complet des interactions : appels, emails, visites, documents partagés
+•	Import de contacts via fichier CSV / vCard
+•	Déduplication automatique des doublons
+•	Segmentation par tags et listes
+2.1.2 Pipeline de prospection
+•	Vue pipeline visuelle (Kanban) avec étapes configurables
+•	Etapes : Nouveau lead → Qualifié → Visite planifiée → Offre → Signé → Perdu
+•	Attribution des leads à un agent ou à une équipe
+•	Score de qualification du prospect (automatisé ou manuel)
+•	Relances automatiques par email/SMS selon les étapes
+2.1.3 Activités et tâches
+•	Création de tâches avec dates d'échéance, priorité, assignation
+•	Rappels automatiques (push, email, SMS)
+•	Synchronisation avec Google Calendar / Outlook
+•	Journal d'activité par contact et par bien
+2.1.4 Performance agents
+•	Tableau de bord individuel par agent : leads traités, visites, taux de conversion
+•	Classement et comparaison inter-agents
+•	Rapports hebdomadaires/mensuels exportables
+
+2.2 Module Catalogue des biens
+2.2.1 Référentiel des biens
+•	Fiche bien complète : adresse géolocalisée, superficie, type, étage, description
+•	Galerie photos (jusqu'à 50 images), plans, visite virtuelle 360°
+•	Catégories : Appartement, Maison, Villa, Local commercial, Terrain, Immeuble
+•	Types de transaction : Vente, Location, Location-vente, Viager
+•	Statuts : Disponible, Sous compromis, Loué, Vendu, Archivé
+•	Intégration DPE (Diagnostic de Performance Énergétique) et autres diagnostics
+2.2.2 Matching automatique
+•	Algorithme de matching entre les critères d'un prospect et les biens disponibles
+•	Alerte automatique par email/SMS lors de l'arrivée d'un bien correspondant
+•	Score de compatibilité affiché sur la fiche prospect
+2.2.3 Publication multi-portails
+•	Connexion API aux portails immobiliers (SeLoger, Leboncoin, Mubawab, Expat-Dakar…)
+•	Publication en un clic depuis la fiche bien
+•	Synchronisation automatique des statuts (vendu, retiré)
+•	Suivi des statistiques d'annonces : vues, contacts générés par portail
+
+2.3 Module Gestion locative
+2.3.1 Dossier locataire
+•	Collecte numérique des pièces justificatives (pièce d'identité, justificatif de revenus, garant)
+•	Calcul automatique du taux d'effort (loyer / revenus)
+•	Score de solvabilité locataire
+•	Signature électronique du dossier
+2.3.2 Gestion des baux
+•	Génération automatique des baux : nu meublé, commercial, saisonnier
+•	Gestion des renouvellements, révisions de loyer (IRL) et résiliations
+•	Alertes préventives avant échéance de bail
+•	Bibliothèque de modèles juridiques personnalisables
+2.3.3 Quittancement et paiements
+•	Génération automatique des appels de loyer mensuels
+•	Émission des quittances en PDF dès le paiement enregistré
+•	Suivi des paiements : payé, en attente, retard, impayé
+•	Relances automatiques graduelles : J+5, J+15, J+30
+•	Virement automatique des loyers collectés aux propriétaires
+•	Intégration des moyens de paiement locaux (Mobile Money, virement bancaire, carte)
+2.3.4 États des lieux
+•	Application mobile dédiée pour réaliser l'état des lieux d'entrée et de sortie
+•	Photos associées pièce par pièce
+•	Signature électronique en mobilité
+•	Comparaison automatique entrée/sortie pour le calcul des retenues sur caution
+2.3.5 Gestion des travaux
+•	Tickets de maintenance générés par le locataire ou l'agent
+•	Affectation à un prestataire (plombier, électricien, etc.)
+•	Suivi du statut : Ouvert → En cours → Résolu
+•	Historique des interventions par bien
+2.3.6 Rapport de gérance
+•	Compte-rendu de gérance (CRG) mensuel automatique par propriétaire
+•	Détail : loyers encaissés, charges déduites, honoraires, net reversé
+•	Envoi automatique par email au propriétaire
+
+2.4 Module Transactions & Vente
+2.4.1 Suivi du cycle de vente
+•	Pipeline de vente configurable avec jalons
+•	Étapes : Mandat reçu → Visites → Offre d'achat → Compromis → Acte final
+•	Alertes sur les délais légaux (droit de rétractation SRU 10 jours, etc.)
+2.4.2 Documents transactionnels
+•	Génération de l'offre d'achat, du compromis, de la promesse de vente
+•	Signature électronique intégrée (Yousign, DocuSign, ou équivalent local)
+•	Espace de partage sécurisé avec notaires et avocats
+•	Archivage légal des actes signés pendant 10 ans minimum
+2.4.3 Commissions et honoraires
+•	Paramétrage des grilles d'honoraires (fixe ou % du prix de vente)
+•	Calcul automatique de la commission de chaque agent impliqué
+•	Gestion du partage de commission inter-agences (co-exclusivités)
+•	Facturation automatique des honoraires
+
+2.5 Module Syndic / Copropriété
+2.5.1 Gestion de la copropriété
+•	Registre des copropriétaires avec tantièmes
+•	Budget prévisionnel annuel et appels de charges trimestriels
+•	Suivi des paiements des charges par copropriétaire
+•	Gestion du fonds de travaux (loi ALUR ou équivalent local)
+2.5.2 Assemblées générales
+•	Convocations automatiques par email/courrier avec ordre du jour
+•	Vote en ligne sécurisé (AG dématérialisée)
+•	Rédaction et signature des procès-verbaux
+•	Archivage des PV avec horodatage
+2.5.3 Carnet d'entretien
+•	Historique complet des travaux et interventions sur l'immeuble
+•	Gestion des contrats de prestataires (gardien, nettoyage, ascensoriste)
+•	Alertes de renouvellement des contrats
+2.5.4 Espace copropriétaires
+•	Portail web dédié accessible 24/7 pour chaque copropriétaire
+•	Consultation des documents : PV, appels de charges, contrats
+•	Messagerie avec le syndic
+
+2.6 Module Reporting & Finance
+•	Tableau de bord global de l'agence (CA, mandats, visites, conversions)
+•	Suivi du chiffre d'affaires par agent, par mois, par type de transaction
+•	Calcul des commissions et honoraires par période
+•	Facturation clients avec TVA et numérotation légale
+•	Export comptable au format compatible Sage, QuickBooks, EBP
+•	Rapports personnalisables et planifiés (PDF, Excel)
+•	Prévisions de revenus basées sur le pipeline en cours
+•	KPIs temps réel : taux d'occupation, délai moyen de vente, taux de recouvrement
+
+ 
+3. Besoins non fonctionnels
+3.1 Performance
+Indicateur	Exigence
+Temps de chargement des pages	< 2 secondes (hors médias lourds)
+Disponibilité de la plateforme	>= 99,5% (SLA mensuel)
+Temps de réponse API	< 500 ms pour 95% des requêtes
+Capacité de stockage documents	Min. 10 Go par tenant (extensible)
+Upload d'images	Jusqu'à 20 MB par fichier, compression automatique
+Utilisateurs simultanés par tenant	Jusqu'à 500 sans dégradation
+
+3.2 Sécurité
+•	Chiffrement des données en transit (TLS 1.3) et au repos (AES-256)
+•	Authentification multi-facteurs (MFA) obligatoire pour les rôles administrateurs
+•	Gestion des sessions avec expiration automatique (timeout configurable)
+•	Journalisation complète des actions utilisateurs (audit log)
+•	Isolation stricte des données entre tenants (architecture multi-tenants)
+•	Tests de pénétration trimestriels
+•	Conformité RGPD : droit à l'oubli, portabilité, consentement explicite
+•	Sauvegarde quotidienne avec rétention 30 jours, rétention annuelle 1 an
+3.3 Compatibilité
+•	Navigateurs : Chrome, Firefox, Safari, Edge (2 dernières versions majeures)
+•	Responsive design : desktop, tablette, mobile
+•	Application mobile native iOS (>= 15) et Android (>= 10)
+•	Accessibilité WCAG 2.1 niveau AA
+•	Interface disponible en français, avec architecture i18n pour extension future
+3.4 Scalabilité
+•	Architecture cloud élastique (auto-scaling horizontal)
+•	Découpage microservices ou modulaire permettant des déploiements indépendants
+•	Support de 10 000+ tenants sans refonte architecturale
+•	CDN pour la distribution des assets statiques et médias
+3.5 Maintenabilité
+•	Documentation technique complète (API, architecture, base de données)
+•	Couverture de tests unitaires >= 80%
+•	Pipeline CI/CD automatisé (tests, build, déploiement)
+•	Monitoring et alerting en temps réel (Datadog, Grafana ou équivalent)
+
+ 
+4. Architecture technique recommandée
+4.1 Stack technologique
+Couche	Technologie recommandée	Justification
+Frontend Web	React.js / Next.js	SSR, performance, SEO
+Application Mobile	React Native	Code partagé iOS/Android
+Backend API	Node.js (NestJS) ou Python (FastAPI)	Productivité, écosystème
+Base de données principale	SQL Serveur Robustesse, support JSON, transactions
+Cache	Redis	Sessions, rate limiting, cache queries
+Stockage fichiers/médias	AWS S3 / Cloudflare R2	Scalable, CDN intégré
+Hébergement	AWS, Azure ou OVHcloud	Régions africaines disponibles
+Emails transactionnels	SendGrid / Amazon SES	Fiabilité delivrabilité
+SMS / Notifications	Twilio / Orange SMS API	Couverture Afrique
+Paiements	CinetPay, Stripe, Flutterwave	Mobile Money + carte
+Signature électronique	Yousign ou DocuSign	Conformité légale
+Recherche	Elasticsearch / Meilisearch	Recherche plein texte rapide
+
+4.2 Architecture multi-tenants
+L'isolation des données entre agences clientes sera assurée par une architecture multi-tenants de type « base de données partagée, schéma séparé » (Shared DB, Separate Schema). Chaque tenant dispose de son propre schéma SQL Serveur, garantissant l'isolation des données tout en optimisant les coûts d'infrastructure.
+•	Identification du tenant via sous-domaine personnalisé (ex : agence-dupont.immoplatform.com)
+•	Ou via header HTTP X-Tenant-ID pour les appels API
+•	Middleware d'identification du tenant à chaque requête
+•	Pas de données croisées possibles entre tenants
+4.3 API et intégrations
+•	API RESTful versionnée (v1, v2...) avec documentation OpenAPI/Swagger
+•	Webhooks configurables pour déclencher des actions dans les systèmes tiers
+•	SDK JavaScript disponible pour les intégrations partenaires
+•	Connecteurs natifs : portails immobiliers, logiciels comptables, outils de signature
+
+ 
+5. Modèle SaaS et monétisation
+5.1 Plans tarifaires
+Plan	Cible	Fonctionnalités	Prix indicatif / mois
+Starter	Agence 1-3 agents	CRM + Catalogue + Locatif basique	15 000 – 25 000 FCFA
+Pro	Agence 4-15 agents	Tous les modules sauf Syndic + API	40 000 – 80 000 FCFA
+Business	Agence 16-50 agents	Tous les modules + Syndic + Support prioritaire	100 000 – 200 000 FCFA
+Enterprise	Réseau multi-agences	White label + API avancée + Accompagnement dédié	Sur devis
+
+Note : Les prix ci-dessus sont donnés à titre indicatif et devront être validés par une étude de marché terrain. Une période d'essai gratuite de 14 jours sera proposée à toutes les agences sans carte bancaire requise.
+5.2 Gestion des abonnements
+•	Souscription en ligne avec paiement par carte bancaire ou Mobile Money
+•	Facturation mensuelle ou annuelle (avec remise de 15% pour le paiement annuel)
+•	Upgrade/downgrade de plan à tout moment depuis le tableau de bord
+•	Suspension automatique du compte en cas d'impayé (délai de grâce 15 jours)
+•	Résiliation possible à tout moment, sans frais, données exportables 30 jours post-résiliation
+5.3 Onboarding
+•	Wizard de configuration guidé à la première connexion
+•	Import automatique des données existantes (CSV, Excel)
+•	Sessions de formation en ligne (webinaires mensuels)
+•	Base de connaissances et tutoriels vidéo intégrés
+•	Support par chat en temps réel (Pro et Business) et ticketing (Starter)
+
+ 
+6. Gestion des rôles et permissions
+6.1 Rôles disponibles
+Rôle	Description	Accès
+Super Admin	Équipe interne de la plateforme	Accès à tous les tenants (support)
+Admin Agence	Directeur ou responsable de l'agence	Gestion complète du tenant
+Agent Commercial	Négociateur, agent terrain	CRM, biens, visites, transactions
+Gestionnaire Locatif	Chargé de gestion locative	Module locatif complet
+Comptable	Service comptabilité agence	Finance, facturation, export
+Assistant	Secrétariat, accueil	Lecture CRM, saisie basique
+Lecture seule	Partenaires, stagiaires	Consultation sans modification
+
+6.2 Règles générales
+•	Chaque rôle dispose d'une liste blanche de permissions (RBAC — Role-Based Access Control)
+•	L'Admin Agence peut créer des rôles personnalisés et ajuster les permissions
+•	Toute action sensible (suppression, export, accès financier) génère un log d'audit
+•	Authentification par email + mot de passe, SSO Google/Microsoft optionnel
+•	MFA obligatoire pour Admin Agence et Comptable
+
+ 
+7. Interfaces utilisateur
+7.1 Principes de design
+•	Design system cohérent basé sur des composants réutilisables (type MUI, Shadcn ou design propriétaire)
+•	Interface en français, claire, avec aide contextuelle
+•	Mode sombre et clair selon les préférences système
+•	Temps de réponse visuel immédiat (skeleton loaders, optimistic UI)
+•	Accessibilité : contraste suffisant, navigation clavier, compatibilité lecteurs d'écran
+7.2 Écrans principaux
+Écran	Description
+Tableau de bord principal	Synthèse visuelle : activités récentes, KPIs, alertes, calendrier du jour
+CRM — Liste contacts	Tableau filtrable et triable, vue Kanban pipeline, recherche rapide
+Fiche contact	Profil complet, historique, biens associés, tâches, documents
+Catalogue biens	Grille / liste / carte, filtres avancés, statuts colorés
+Fiche bien	Galerie, détails, historique, locataires/acheteurs associés, documents
+Gestion locative	Dashboard locatif : loyers du mois, retards, travaux en cours
+Transactions	Pipeline de vente visuel, jalons, documents associés
+Syndic	Vue immeuble, copropriétaires, charges, AG à venir
+Finance	Graphiques CA, facturation, commissions, export
+Paramètres agence	Utilisateurs, rôles, intégrations, abonnement
+
+7.3 Application mobile
+•	Disponible sur iOS et Android
+•	Fonctionnalités prioritaires en mobilité : état des lieux, visite de biens, CRM, photos
+•	Mode hors-ligne partiel avec synchronisation différée
+•	Notifications push pour les rappels, alertes paiements, nouvelles tâches
+
+ 
+8. Planning et phases de développement
+8.1 Découpage en phases
+Phase	Durée	Contenu
+Phase 0 — Cadrage	2 semaines	Validation CDC, wireframes, choix stack, mise en place équipe
+Phase 1 — MVP	3 mois	CRM, Catalogue biens, Gestion locative basique, Auth multi-tenants
+Phase 2 — Core métier	3 mois	Transactions/vente, Gestion locative complète, Reporting
+Phase 3 — Avancé	2 mois	Syndic, API ouverte, Intégrations portails, Mobile app
+Phase 4 — Scale	Continu	Performance, sécurité, nouvelles intégrations, fonctionnalités
+
+8.2 Critères de succès du MVP
+•	Au moins 5 agences pilotes en production avec données réelles
+•	Gestion locative complète : bail → quittance → paiement opérationnelle
+•	CRM fonctionnel avec pipeline de prospection
+•	Publication d'annonces sur au moins 2 portails immobiliers
+•	Application mobile iOS et Android disponible
+•	Zéro incident de sécurité critique dans les 3 premiers mois
+
+ 
+9. Contraintes et risques
+9.1 Contraintes
+Contrainte	Type	Mitigation
+Connectivité internet variable en Afrique	Technique	Mode offline partiel, compression agressive, CDN local
+Diversité des réglementations locales	Juridique	Modèles de baux paramétrables par pays
+Adoption par des utilisateurs peu technophiles	Usage	UX simplifiée, formations incluses, support réactif
+Intégration des paiements locaux (Mobile Money)	Technique	Partenariat CinetPay / Flutterwave dès le MVP
+Hébergement et souveraineté des données	Légal/Politique	Option hébergement local (OVH, Afripa Telecom)
+Budget de développement limité en phase early-stage	Financier	Priorisation MVP strict, architecture évolutive
+
+9.2 Risques identifiés
+Risque	Probabilité	Impact	Plan de contingence
+Retard de développement	Moyen	Élevé	Buffer de 20% sur chaque phase, backlog priorisé
+Faible adoption initiale	Moyen	Élevé	Programme agences pilotes, freemium temporaire
+Concurrent entrant local	Faible	Moyen	Différenciation par l'UX et le support terrain
+Faille de sécurité	Faible	Très élevé	Tests de pénétration, audit trimestriel, bug bounty
+Perte d'un partenaire portail	Faible	Moyen	Multi-portails dès le départ
+
+ 
+10. Glossaire
+Terme	Définition
+SaaS	Software as a Service : logiciel hébergé dans le cloud, accessible par abonnement
+Multi-tenant	Architecture où une seule instance logicielle sert plusieurs clients isolés
+CRM	Customer Relationship Management : gestion de la relation client
+DPE	Diagnostic de Performance Énergétique
+CRG	Compte-Rendu de Gérance : rapport mensuel envoyé au propriétaire
+MFA	Multi-Factor Authentication : double authentification
+RBAC	Role-Based Access Control : contrôle d'accès par rôles
+API	Application Programming Interface : interface de programmation
+Tenant	Client (agence) de la plateforme SaaS
+IRL	Indice de Référence des Loyers : indice légal de révision des loyers
+CDN	Content Delivery Network : réseau de distribution de contenu
+Pipeline	Représentation visuelle des étapes d'un processus commercial
+
+11. Annexes
+11.1 Documents à produire en complément
+•	Wireframes et maquettes UX (Phase 0)
+•	Architecture technique détaillée (diagramme C4)
+•	Modèle de données (MCD / ERD)
+•	Spécifications API (OpenAPI YAML)
+•	Plan de tests et stratégie QA
+•	Plan de migration pour les agences passant d'Excel à la plateforme
+•	Politique de confidentialité et CGU
+11.2 Références
+•	RGPD — Règlement Général sur la Protection des Données (UE 2016/679)
+•	Loi ALUR (France) — Accès au Logement et Urbanisme Rénové
+•	Code civil OHADA — Contrats de bail dans l'espace OHADA
+•	ISO/IEC 27001 — Sécurité de l'information
+
+
+Validation du document
+Ce cahier des charges doit être relu, amendé et signé par le porteur de projet et les parties prenantes principales avant le démarrage de la Phase 0. Toute modification majeure du périmètre après validation fera l'objet d'un avenant formalisé.
+
+
